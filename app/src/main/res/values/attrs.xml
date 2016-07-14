@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="LevelLayout">
+        <!-- the count of step that equals levels sub one-->
+        <attr name="stepCount" format="integer"/>
+        <!-- the default position of chosen level -->
+        <attr name="defaultPos" format="integer"/>
+        <!-- the icon of level -->
+        <attr name="thumb" format="reference"/>
+        <!-- the width of level's icon -->
+        <attr name="thumbWidth" format="dimension"/>
+        <!-- the height of level's icon -->
+        <attr name="thumbHeight" format="dimension"/>
+        <!-- the width of line between level and level -->
+        <attr name="lineWidth" format="dimension"/>
+        <!-- the color of line between level and level -->
+        <attr name="lineColor" format="color"/>
+        <!-- the radius of point where is located level -->
+        <attr name="pointRadius" format="dimension"/>
+        <!-- the color of point where is located level -->
+        <attr name="pointColor" format="color"/>
+        <!-- the speed of thumb scrolling -->
+        <attr name="scrollDuration" format="integer"/>
+    </declare-styleable>
+</resources>
