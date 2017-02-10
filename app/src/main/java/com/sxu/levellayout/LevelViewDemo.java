@@ -2,17 +2,20 @@ package com.sxu.levellayout;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class LevelViewDemo extends AppCompatActivity {
 
-    private LevelView levelView;
-    private LinearLayout levelTitleLayout;
-
+    private ViewPager viewPager;
     private boolean isPressed = false;
     private int[] icon = {R.drawable.star_0, R.drawable.star_3, R.drawable.star_4, R.drawable.star_5};
     private int[] clickedIcon = {R.drawable.star_0_click, R.drawable.star_3_click, R.drawable.star_4_click, R.drawable.star_5_click};
@@ -22,65 +25,92 @@ public class LevelViewDemo extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        levelView = (LevelView) findViewById(R.id.level_view);
-        levelTitleLayout = (LinearLayout) findViewById(R.id.level_title_layout);
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        viewPager.setAdapter(new MyViewPagerAdapter());
+    }
 
-        if (levelView.getStepCount() != 0) {
-            for (int i = 0; i <= levelView.getStepCount(); i++) {
-                TextView textView = new TextView(this);
-                textView.setText(title[i]);
-                textView.setGravity(Gravity.CENTER);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                params.weight = 1;
-                textView.setLayoutParams(params);
-                levelTitleLayout.addView(textView);
-            }
+    private class MyViewPagerAdapter extends PagerAdapter {
+
+        @Override
+        public int getCount() {
+            return 3;
         }
 
-        levelView.setOnLevelChangeListener(new LevelView.OnLevelChangeListener() {
-            @Override
-            public void onLevelChanged(int progress) {
-                int currentPos = (int)(progress / levelView.getStepLength());
-                int offset = (int)(progress % levelView.getStepLength());
-                if (currentPos >=0 && currentPos < icon.length-1 && offset > levelView.getStepLength() / 2) {
-                    currentPos++;
-                }
-                if (isPressed) {
-                    levelView.setThumb(getResources().getDrawable(clickedIcon[currentPos]));
-                } else {
-                    levelView.setThumb(getResources().getDrawable(icon[currentPos]));
+        @Override
+        public boolean isViewFromObject(View view, Object object) {
+            return view.equals(object);
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            View itemLayout = getLayoutInflater().inflate(R.layout.item_layout, null, false);
+            final LevelView levelView = (LevelView) itemLayout.findViewById(R.id.level_view);
+            final LinearLayout levelTitleLayout = (LinearLayout) itemLayout.findViewById(R.id.level_title_layout);
+
+            if (levelView.getStepCount() != 0) {
+                for (int i = 0; i <= levelView.getStepCount(); i++) {
+                    TextView textView = new TextView(LevelViewDemo.this);
+                    textView.setText(title[i]);
+                    textView.setGravity(Gravity.CENTER);
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    params.weight = 1;
+                    textView.setLayoutParams(params);
+                    levelTitleLayout.addView(textView);
                 }
             }
 
-            @Override
-            public void onLevelClick() {
-                isPressed = !isPressed;
-                levelView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isPressed) {
-                            levelView.setThumb(getResources().getDrawable(clickedIcon[levelView.getDefaultPos()]));
-                        } else {
-                            levelView.setThumb(getResources().getDrawable(icon[levelView.getDefaultPos()]));
-                        }
+            levelView.setOnLevelChangeListener(new LevelView.OnLevelChangeListener() {
+                @Override
+                public void onLevelChanged(int progress) {
+                    int currentPos = (int)(progress / levelView.getStepLength());
+                    int offset = (int)(progress % levelView.getStepLength());
+                    if (currentPos >=0 && currentPos < icon.length-1 && offset > levelView.getStepLength() / 2) {
+                        currentPos++;
                     }
-                });
-            }
-
-            @Override
-            public void onStartTrackingTouch() {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch() {
-                if (isPressed) {
-                    levelView.setThumb(getResources().getDrawable(clickedIcon[levelView.getDefaultPos()]));
-                } else {
-                    levelView.setThumb(getResources().getDrawable(icon[levelView.getDefaultPos()]));
+                    if (isPressed) {
+                        levelView.setThumb(getResources().getDrawable(clickedIcon[currentPos]));
+                    } else {
+                        levelView.setThumb(getResources().getDrawable(icon[currentPos]));
+                    }
                 }
-            }
-        });
 
+                @Override
+                public void onLevelClick() {
+                    isPressed = !isPressed;
+                    levelView.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (isPressed) {
+                                levelView.setThumb(getResources().getDrawable(clickedIcon[levelView.getDefaultPos()]));
+                            } else {
+                                levelView.setThumb(getResources().getDrawable(icon[levelView.getDefaultPos()]));
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public void onStartTrackingTouch() {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch() {
+                    if (isPressed) {
+                        levelView.setThumb(getResources().getDrawable(clickedIcon[levelView.getDefaultPos()]));
+                    } else {
+                        levelView.setThumb(getResources().getDrawable(icon[levelView.getDefaultPos()]));
+                    }
+                }
+            });
+
+            container.addView(itemLayout);
+            return itemLayout;
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            //super.destroyItem(container, position, object);
+        }
     }
 }

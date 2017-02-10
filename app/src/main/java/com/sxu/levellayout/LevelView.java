@@ -15,6 +15,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import static android.R.attr.paddingLeft;
+import static android.R.attr.start;
+
 /*******************************************************************************
  * FileName: LevelView
  *
@@ -43,7 +46,10 @@ public class LevelView extends View {
     private float startPos;
     private float startX;
     private float offset = 0;
+    private float scrollLeft; // 滑动的左边界
+    private float scrollRight;  // 滑动的右边界
     private int oldPosition = 0;
+    private boolean canScroll;
     private OnLevelChangeListener listener;
 
     /**
@@ -68,7 +74,6 @@ public class LevelView extends View {
         lineColor = array.getColor(R.styleable.LevelLayout_lineColor, Color.parseColor("#eeeeee"));
         pointRadius = array.getDimension(R.styleable.LevelLayout_pointRadius, 15);
         pointColor = array.getColor(R.styleable.LevelLayout_pointColor, Color.parseColor("#eeeeee"));
-
         array.recycle();
     }
 
@@ -120,61 +125,152 @@ public class LevelView extends View {
      * @return
      */
     public Bitmap drawableToBitmap(Drawable drawable) {
-        if (drawable == null) {
-            return null;
-        }
-
-        if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        }
-
-        try {
-            Bitmap bitmap;
-            if (drawable instanceof ColorDrawable) {
-                bitmap = Bitmap.createBitmap(50, 50, Bitmap.Config.RGB_565);
+        Bitmap bitmap = null;
+        if (drawable != null) {
+            if (drawable instanceof BitmapDrawable) {
+                bitmap = ((BitmapDrawable) drawable).getBitmap();
             } else {
-                bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.RGB_565);
+                try {
+                    if (drawable instanceof ColorDrawable) {
+                        bitmap = Bitmap.createBitmap(50, 50, Bitmap.Config.RGB_565);
+                    } else {
+                        bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.RGB_565);
+                    }
+                    Canvas canvas = new Canvas(bitmap);
+                    drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                    drawable.draw(canvas);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-            Canvas canvas = new Canvas(bitmap);
-            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-            drawable.draw(canvas);
-            return bitmap;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
+
+        return bitmap;
     }
+
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        switch (event.getAction()) {
+//            case MotionEvent.ACTION_DOWN:
+//                getParent().requestDisallowInterceptTouchEvent(true);
+//                canScroll = true;
+//                offset = 0;
+//                oldPosition = defaultPos;
+//                startPos = event.getX();
+//                startX = event.getX();
+//                scrollLeft = getPaddingLeft() + thumbWidth / 2;
+//                scrollRight = getWidth() - getPaddingRight() - thumbWidth / 2;
+//                defaultPos = (int)((startPos - getPaddingLeft()) / stepLength);
+//                listener.onStartTrackingTouch();
+//                break;
+//            case MotionEvent.ACTION_MOVE:
+//                // avoid thumb scrolls to extra area
+//                Log.i("out", "getX===" + event.getX() + " " + event.getRawX());
+//                if (event.getX() < startX && event.getX() > scrollLeft
+//                    || event.getX() > startX && event.getX() < scrollRight) {
+//                    offset += (event.getX() - startX);
+//                    startX = event.getX();
+//                    Log.i("out", "X===" + event.getX() + " offset==" + offset);
+//                    if (Math.abs(offset) > DEFAULT_CLICK_RANGE) {
+//                        listener.onLevelChanged((int) (event.getX() - scrollLeft));
+//                        invalidate();
+//                    }
+//                }
+//                break;
+//            case MotionEvent.ACTION_UP:
+//                getParent().requestDisallowInterceptTouchEvent(false);
+//                // get latest position of thumb
+//                defaultPos = (int) ((event.getX() - getPaddingLeft()) / stepLength);
+//                // avoid thumb scrolls to extra area
+//                Log.i("out", "XX=====" + event.getX());
+//                if (event.getX() > 0 && event.getX() < getWidth()) {
+//                    // get the distance of up and down
+//                    offset = event.getX() - startPos;
+//                    if (Math.abs(offset) < DEFAULT_CLICK_RANGE) { // thumb's click event
+//                        offset = (event.getX() - getPaddingLeft()) % stepLength;
+//                        if (offset > stepLength / 2) {
+//                            defaultPos++;
+//                        }
+//                        final float distance = (oldPosition - defaultPos) * stepLength;
+//                        if (distance != 0) {
+//                            ValueAnimator animator = ValueAnimator.ofFloat(distance, 0).setDuration(scrollDuration);
+//                            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//                                @Override
+//                                public void onAnimationUpdate(ValueAnimator animation) {
+//                                    offset = (float) animation.getAnimatedValue();
+//                                    invalidate();
+//                                }
+//                            });
+//                            animator.start();
+//                        } else {
+//                            listener.onLevelClick();
+//                        }
+//                    } else if (offset > DEFAULT_CLICK_RANGE) { // scroll from left to right
+//                        offset = offset % stepLength;
+//                        if (offset > stepLength / 2 && defaultPos < stepCount) {
+//                            defaultPos++;
+//                        }
+//                    } else { // scroll from right to left
+//                        offset = offset % stepLength;
+//                        if (Math.abs(offset) < stepLength / 2 && defaultPos < stepCount) {
+//                            defaultPos++;
+//                        }
+//                    }
+//                    listener.onStopTrackingTouch();
+//                }
+//                //offset = 0;
+//                invalidate();
+//                break;
+//            default:
+//                break;
+//        }
+//
+//        return true;
+//    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                getParent().requestDisallowInterceptTouchEvent(true);
+                canScroll = true;
                 oldPosition = defaultPos;
-                startPos = event.getX();
-                startX = event.getX();
-                defaultPos = (int)((startPos - getPaddingLeft()) / stepLength);
+                startX = startPos = event.getX();
+                scrollLeft = getPaddingLeft() + thumbWidth / 2;
+                scrollRight = getWidth() - getPaddingRight() - thumbWidth / 2;
+                float thumbPos = defaultPos * stepLength + getPaddingLeft() + thumbWidth / 2;
+                if (startX < thumbPos - DEFAULT_CLICK_RANGE || startX > thumbPos + DEFAULT_CLICK_RANGE) {
+                    canScroll = false;
+                }
+                Log.i("out", "thumb pos==" + oldPosition + " x==" + event.getX());
+//                startPos = event.getX();
+//                startX = event.getX();
+
+
                 listener.onStartTrackingTouch();
                 break;
             case MotionEvent.ACTION_MOVE:
                 // avoid thumb scrolls to extra area
-                if (event.getX() > 0 && event.getX() < getWidth()-thumbWidth/2) {
+                Log.i("out", "x===" + event.getX() + " startPos==" + startPos);
+                if (event.getX() >= scrollLeft && event.getX() <= scrollRight) {
                     offset += (event.getX() - startX);
                     startX = event.getX();
-                    Log.i("out", "X===" + event.getX() + " offset==" + offset);
-                    if (Math.abs(offset) > DEFAULT_CLICK_RANGE) {
-                        listener.onLevelChanged((int) (event.getX() - thumbWidth / 2 - getPaddingLeft()));
+                    if (canScroll) {
+                        oldPosition = (int) ((event.getX() - getPaddingLeft()) / stepLength);
+                        listener.onLevelChanged((int) (event.getX() - scrollLeft));
                         invalidate();
                     }
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                // get latest position of thumb
-                defaultPos = (int) ((event.getX() - getPaddingLeft()) / stepLength);
+                getParent().requestDisallowInterceptTouchEvent(false);
                 // avoid thumb scrolls to extra area
-                if (event.getX() > 0 && event.getX() < getWidth()) {
+                //if (event.getX() > 0 && event.getX() < getWidth()) {
                     // get the distance of up and down
                     offset = event.getX() - startPos;
                     if (Math.abs(offset) < DEFAULT_CLICK_RANGE) { // thumb's click event
+                        // get latest position of thumb
+                        defaultPos = (int) ((event.getX() - getPaddingLeft()) / stepLength);
                         offset = (event.getX() - getPaddingLeft()) % stepLength;
                         if (offset > stepLength / 2) {
                             defaultPos++;
@@ -191,23 +287,32 @@ public class LevelView extends View {
                             });
                             animator.start();
                         } else {
-                            listener.onLevelClick();
+                            Log.i("out", "offset==" + offset);
+                            if (offset < thumbWidth) {
+                                listener.onLevelClick();
+                            }
                         }
-                    } else if (offset > DEFAULT_CLICK_RANGE) { // scroll from left to right
-                        offset = offset % stepLength;
-                        if (offset > stepLength / 2 && defaultPos < stepCount) {
-                            defaultPos++;
-                        }
-                    } else { // scroll from right to left
-                        offset = offset % stepLength;
-                        if (Math.abs(offset) < stepLength / 2 && defaultPos < stepCount) {
-                            defaultPos++;
+                    } else {
+                        if (canScroll) {
+                            // get latest position of thumb
+                            defaultPos = (int) ((event.getX() - getPaddingLeft()) / stepLength);
+                            if (offset > DEFAULT_CLICK_RANGE) { // scroll from left to right
+                                offset = offset % stepLength;
+                                if (offset > stepLength / 2 && defaultPos < stepCount) {
+                                    defaultPos++;
+                                }
+                            } else { // scroll from right to left
+                                offset = offset % stepLength;
+                                if (Math.abs(offset) < stepLength / 2 && defaultPos > 0 && defaultPos < stepCount) {
+                                    defaultPos++;
+                                }
+                            }
                         }
                     }
+                    invalidate();
                     listener.onStopTrackingTouch();
-                }
+                //}
                 offset = 0;
-                invalidate();
                 break;
             default:
                 break;
