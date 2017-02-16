@@ -26,7 +26,7 @@
         level:thumbHeight="30dp"
         level:pointRadius="6dp"
         level:pointColor="#eeeeee"
-        level:lineWidth="4dp"
+        level:lineHeight="4dp"
         level:lineColor="#eeeeee"
         level:stepCount="3"
         level:defaultPos="2"/>

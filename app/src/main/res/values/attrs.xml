@@ -12,7 +12,7 @@
         <!-- the height of level's icon -->
         <attr name="thumbHeight" format="dimension"/>
         <!-- the width of line between level and level -->
-        <attr name="lineWidth" format="dimension"/>
+        <attr name="lineHeight" format="dimension"/>
         <!-- the color of line between level and level -->
         <attr name="lineColor" format="color"/>
         <!-- the radius of point where is located level -->

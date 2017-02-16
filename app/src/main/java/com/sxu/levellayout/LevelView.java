@@ -14,6 +14,8 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.sxu.levellayout.R;
+
 /*******************************************************************************
  * FileName: LevelView
  *
@@ -61,12 +63,12 @@ public class LevelView extends View {
         super(context, attrs);
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.LevelLayout);
         thumb = array.getDrawable(R.styleable.LevelLayout_thumb);
-        thumbWidth = array.getDimension(R.styleable.LevelLayout_thumbWidth, 80);
-        thumbHeight = array.getDimension(R.styleable.LevelLayout_thumbHeight, 80);
+        thumbWidth = array.getDimension(R.styleable.LevelLayout_thumbWidth, 90);
+        thumbHeight = array.getDimension(R.styleable.LevelLayout_thumbHeight, 90);
         stepCount = array.getInteger(R.styleable.LevelLayout_stepCount, 3);
         defaultPos = array.getInteger(R.styleable.LevelLayout_defaultPos, 0);
         scrollDuration = array.getInteger(R.styleable.LevelLayout_scrollDuration, 400);
-        lineWidth = array.getDimension(R.styleable.LevelLayout_lineWidth, 9);
+        lineWidth = array.getDimension(R.styleable.LevelLayout_lineHeight, 9);
         lineColor = array.getColor(R.styleable.LevelLayout_lineColor, Color.parseColor("#eeeeee"));
         pointRadius = array.getDimension(R.styleable.LevelLayout_pointRadius, 15);
         pointColor = array.getColor(R.styleable.LevelLayout_pointColor, Color.parseColor("#eeeeee"));
@@ -112,6 +114,15 @@ public class LevelView extends View {
                 bitmapX = startX - bitmap.getWidth() / 2 + offset;
             }
             canvas.drawBitmap(bitmap, bitmapX, (getHeight() - thumbHeight) / 2, pointPaint);
+        }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        if (thumbHeight > 0) {
+            setMeasuredDimension(widthMeasureSpec, MeasureSpec.makeMeasureSpec((int)thumbHeight, MeasureSpec.EXACTLY));
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
     }
 
@@ -180,7 +191,7 @@ public class LevelView extends View {
                 if (Math.abs(offset) < DEFAULT_CLICK_RANGE) { // thumb's click event
                     // get latest position of thumb
                     defaultPos = (int) ((event.getX() - getPaddingLeft()) / stepLength);
-                    offset = event.getX() - defaultPos * stepLength;
+                    offset = event.getX() - defaultPos * stepLength - scrollLeft;
                     if (offset > stepLength / 2) {
                         defaultPos++;
                     }
@@ -197,7 +208,7 @@ public class LevelView extends View {
                         });
                         animator.start();
                     } else {
-                        if (Math.abs(offset - scrollLeft) < thumbWidth) {
+                        if (Math.abs(offset) < thumbWidth) {
                             listener.onLevelClick();
                         }
                     }
