@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -119,11 +120,12 @@ public class LevelView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (thumbHeight > 0) {
-            setMeasuredDimension(widthMeasureSpec, MeasureSpec.makeMeasureSpec((int)thumbHeight, MeasureSpec.EXACTLY));
-        } else {
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+        if (heightMode == MeasureSpec.UNSPECIFIED || heightMode == MeasureSpec.AT_MOST) {
+            heightSize = (int) thumbHeight;
         }
+        setMeasuredDimension(widthMeasureSpec, MeasureSpec.makeMeasureSpec((int)heightSize, MeasureSpec.EXACTLY));
     }
 
     /**
