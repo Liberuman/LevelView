@@ -1,6 +1,6 @@
 package com.sxu.levellayout;
 
-import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -11,11 +11,10 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-
 public class LevelViewDemo extends AppCompatActivity {
 
     private ViewPager viewPager;
+    private int currentPos;
     private boolean isPressed = false;
     private int[] icon = {R.drawable.star_0, R.drawable.star_3, R.drawable.star_4, R.drawable.star_5};
     private int[] clickedIcon = {R.drawable.star_0_click, R.drawable.star_3_click, R.drawable.star_4_click, R.drawable.star_5_click};
@@ -68,25 +67,20 @@ public class LevelViewDemo extends AppCompatActivity {
                         currentPos++;
                     }
                     if (isPressed) {
-                        levelView.setThumb(getResources().getDrawable(clickedIcon[currentPos]));
+                        levelView.setThumb(((BitmapDrawable)getResources().getDrawable(clickedIcon[currentPos])).getBitmap());
                     } else {
-                        levelView.setThumb(getResources().getDrawable(icon[currentPos]));
+                        levelView.setThumb(((BitmapDrawable)getResources().getDrawable(icon[currentPos])).getBitmap());
                     }
                 }
 
                 @Override
                 public void onLevelClick() {
                     isPressed = !isPressed;
-                    levelView.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (isPressed) {
-                                levelView.setThumb(getResources().getDrawable(clickedIcon[levelView.getDefaultPos()]));
-                            } else {
-                                levelView.setThumb(getResources().getDrawable(icon[levelView.getDefaultPos()]));
-                            }
-                        }
-                    });
+                    if (isPressed) {
+                        levelView.setThumb(((BitmapDrawable)getResources().getDrawable(clickedIcon[currentPos])).getBitmap());
+                    } else {
+                        levelView.setThumb(((BitmapDrawable)getResources().getDrawable(icon[currentPos])).getBitmap());
+                    }
                 }
 
                 @Override
@@ -97,9 +91,9 @@ public class LevelViewDemo extends AppCompatActivity {
                 @Override
                 public void onStopTrackingTouch() {
                     if (isPressed) {
-                        levelView.setThumb(getResources().getDrawable(clickedIcon[levelView.getDefaultPos()]));
+                        levelView.setThumb(((BitmapDrawable)getResources().getDrawable(clickedIcon[currentPos])).getBitmap());
                     } else {
-                        levelView.setThumb(getResources().getDrawable(icon[levelView.getDefaultPos()]));
+                        levelView.setThumb(((BitmapDrawable)getResources().getDrawable(icon[currentPos])).getBitmap());
                     }
                 }
             });
